@@ -1,0 +1,1 @@
+ALTER TABLE public.motoristas ADD COLUMN IF NOT EXISTS last_heading numeric DEFAULT 0;

@@ -1,0 +1,2 @@
+ALTER TABLE public.corridas REPLICA IDENTITY FULL;
+ALTER TABLE public.contra_propostas REPLICA IDENTITY FULL;
