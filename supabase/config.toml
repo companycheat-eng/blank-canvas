@@ -1,16 +1,1 @@
-project_id = "xivglpmjbwzlojlafxjh"
-
-[functions.get-maps-key]
-verify_jwt = false
-
-[functions.create-pix-payment]
-verify_jwt = false
-
-[functions.mp-webhook]
-verify_jwt = false
-
-[functions.send-password-reset]
-verify_jwt = false
-
-[functions.reset-password]
-verify_jwt = false
+project_id = "ivxccomejrymrgypxtzh"
