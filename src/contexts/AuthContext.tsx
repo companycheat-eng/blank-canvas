@@ -119,7 +119,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSession(null);
     setUser(null);
     setUserType(null);
-    localStorage.removeItem("sb-xivglpmjbwzlojlafxjh-auth-token");
+    // Clear Supabase auth token from localStorage
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "ivxccomejrymrgypxtzh";
+    localStorage.removeItem(`sb-${projectId}-auth-token`);
     window.location.href = "/login";
   };
 
