@@ -926,7 +926,7 @@ export default function ClienteMapa() {
     if (!corridaAtiva) return;
     try {
       const { supabase } = await import("@/integrations/supabase/client");
-      const { data, error } = await supabase.rpc("aceitar_contra_proposta", {
+      const { data, error } = await (supabase.rpc as any)("aceitar_contra_proposta", {
         p_corrida_id: corridaAtiva.id,
         p_proposta_id: propostaId,
       });
@@ -946,7 +946,7 @@ export default function ClienteMapa() {
   const handleCancelarCorrida = async () => {
     if (!corridaAtiva?.id || !clienteId) return;
     try {
-      const { data, error } = await supabase.rpc("cancelar_corrida_cliente", {
+      const { data, error } = await (supabase.rpc as any)("cancelar_corrida_cliente", {
         p_corrida_id: corridaAtiva.id,
         p_cliente_id: clienteId,
       });

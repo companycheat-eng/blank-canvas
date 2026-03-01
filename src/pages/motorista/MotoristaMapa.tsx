@@ -206,7 +206,7 @@ export default function MotoristaMapa() {
     const poll = async () => {
       try {
         const { supabase } = await import("@/integrations/supabase/client");
-        const { data, error } = await supabase.rpc("corridas_disponiveis_motorista", {
+        const { data, error } = await (supabase.rpc as any)("corridas_disponiveis_motorista", {
           p_motorista_id: motoristaData.id,
           p_excluir_ids: Array.from(recusadas),
         });
@@ -349,7 +349,7 @@ export default function MotoristaMapa() {
 
     try {
       const { supabase } = await import("@/integrations/supabase/client");
-      const { data, error } = await supabase.rpc("aceitar_corrida", {
+      const { data, error } = await (supabase.rpc as any)("aceitar_corrida", {
         p_corrida_id: corrida.id,
         p_motorista_id: motoristaData.id,
       });
@@ -405,7 +405,7 @@ export default function MotoristaMapa() {
 
     try {
       const { supabase } = await import("@/integrations/supabase/client");
-      const { data, error } = await supabase.rpc("enviar_contra_proposta", {
+      const { data, error } = await (supabase.rpc as any)("enviar_contra_proposta", {
         p_corrida_id: corrida.id,
         p_motorista_id: motoristaData.id,
         p_valor: valor,
@@ -518,7 +518,7 @@ export default function MotoristaMapa() {
     setActionLoading(true);
     try {
       const { supabase } = await import("@/integrations/supabase/client");
-      const { data, error } = await supabase.rpc("cancelar_corrida_motorista", {
+      const { data, error } = await (supabase.rpc as any)("cancelar_corrida_motorista", {
         p_corrida_id: corridaAceita.corrida.id,
         p_motorista_id: motoristaData.id,
       });
