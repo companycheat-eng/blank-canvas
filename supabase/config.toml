@@ -1,1 +1,4 @@
 project_id = "ivxccomejrymrgypxtzh"
+
+[functions.signup-motorista]
+verify_jwt = false
