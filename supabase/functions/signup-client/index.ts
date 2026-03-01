@@ -10,9 +10,9 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { telefone, senha, nome, cpf, bairro_id } = await req.json();
+    const { telefone, senha, nome, cpf, email, bairro_id } = await req.json();
 
-    if (!telefone || !senha || !nome || !cpf || !bairro_id) {
+    if (!telefone || !senha || !nome || !cpf || !email || !bairro_id) {
       return new Response(JSON.stringify({ error: "Todos os campos são obrigatórios" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -22,6 +22,15 @@ serve(async (req) => {
     const digits = telefone.replace(/\D/g, "");
     if (digits.length !== 11 || digits[2] !== "9") {
       return new Response(JSON.stringify({ error: "Telefone inválido" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const emailTrimmed = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailTrimmed)) {
+      return new Response(JSON.stringify({ error: "Email inválido" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -38,9 +47,7 @@ serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    const fakeEmail = `${digits}@carreto.app`;
-
-    // Check if user already exists
+    // Check if phone already exists
     const { data: existingCliente } = await supabase
       .from("clientes")
       .select("id")
@@ -54,9 +61,9 @@ serve(async (req) => {
       });
     }
 
-    // Create auth user using admin API (bypasses email validation)
+    // Create auth user with REAL email (bypasses email validation via admin API)
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: fakeEmail,
+      email: emailTrimmed,
       password: senha,
       email_confirm: true,
     });
@@ -64,7 +71,7 @@ serve(async (req) => {
     if (authError) {
       const msg = authError.message;
       return new Response(JSON.stringify({ 
-        error: msg.includes("already been registered") ? "Este telefone já está cadastrado" : msg 
+        error: msg.includes("already been registered") ? "Este email já está cadastrado" : msg 
       }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -78,12 +85,12 @@ serve(async (req) => {
       user_id: userId,
       cpf: cpf.replace(/\D/g, ""),
       telefone: digits,
+      email: emailTrimmed,
       nome,
       bairro_id,
     });
 
     if (insertError) {
-      // Cleanup: delete auth user if profile insert fails
       await supabase.auth.admin.deleteUser(userId);
       return new Response(JSON.stringify({ error: "Erro ao salvar perfil: " + insertError.message }), {
         status: 500,
@@ -91,21 +98,19 @@ serve(async (req) => {
       });
     }
 
-    // Generate a session for the new user
-    // We need to sign in to get tokens
+    // Sign in to get tokens
     const signInRes = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
       },
-      body: JSON.stringify({ email: fakeEmail, password: senha }),
+      body: JSON.stringify({ email: emailTrimmed, password: senha }),
     });
 
     const signInData = await signInRes.json();
 
     if (!signInRes.ok || !signInData.access_token) {
-      // User was created but couldn't get session - still success
       return new Response(JSON.stringify({ 
         ok: true, 
         user_id: userId,

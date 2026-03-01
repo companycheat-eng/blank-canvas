@@ -14,7 +14,7 @@ import { formatarTelefone } from "@/lib/telefone";
 export default function LoginPage() {
   const navigate = useNavigate();
   const { user, userType, loading: authLoading } = useAuth();
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [phonePro, setPhonePro] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -95,12 +95,12 @@ export default function LoginPage() {
 
   const handleClienteLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const phoneLimpo = phone.replace(/\D/g, "");
-    if (phoneLimpo.length !== 11 || phoneLimpo[2] !== "9") {
-      toast.error("Telefone inválido. Use DDD + 9 + 8 dígitos");
+    const emailTrimmed = email.trim();
+    if (!emailTrimmed || !emailTrimmed.includes("@")) {
+      toast.error("Informe um email válido");
       return;
     }
-    await doLogin(`${phoneLimpo}@carreto.app`);
+    await doLogin(emailTrimmed);
   };
 
   const handleProfissionalLogin = async (e: React.FormEvent) => {
@@ -160,14 +160,13 @@ export default function LoginPage() {
             <TabsContent value="cliente">
               <form onSubmit={handleClienteLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone</Label>
+                  <Label htmlFor="email-cli">Email</Label>
                   <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="(71) 90000-0000"
-                    value={phone}
-                    onChange={(e) => setPhone(formatarTelefone(e.target.value))}
-                    maxLength={15}
+                    id="email-cli"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
