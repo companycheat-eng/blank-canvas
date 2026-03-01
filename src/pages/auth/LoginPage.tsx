@@ -14,7 +14,7 @@ import { formatarTelefone } from "@/lib/telefone";
 export default function LoginPage() {
   const navigate = useNavigate();
   const { user, userType, loading: authLoading } = useAuth();
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [phonePro, setPhonePro] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -95,12 +95,33 @@ export default function LoginPage() {
 
   const handleClienteLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const emailTrimmed = email.trim();
-    if (!emailTrimmed || !emailTrimmed.includes("@")) {
-      toast.error("Informe um email válido");
+    const phoneLimpo = phone.replace(/\D/g, "");
+    if (phoneLimpo.length !== 11 || phoneLimpo[2] !== "9") {
+      toast.error("Telefone inválido. Use DDD + 9 + 8 dígitos");
       return;
     }
-    await doLogin(emailTrimmed);
+    // Resolve real auth email from phone via edge function
+    setLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/find-user-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ phone: phoneLimpo, user_type: "cliente" }),
+      });
+      const data = await res.json();
+      if (data.email) {
+        await doLogin(data.email);
+      } else {
+        toast.error("Usuário não encontrado");
+        setLoading(false);
+      }
+    } catch {
+      toast.error("Erro ao buscar usuário. Tente novamente.");
+      setLoading(false);
+    }
   };
 
   const handleProfissionalLogin = async (e: React.FormEvent) => {
@@ -160,13 +181,14 @@ export default function LoginPage() {
             <TabsContent value="cliente">
               <form onSubmit={handleClienteLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email-cli">Email</Label>
+                  <Label htmlFor="phone">Telefone</Label>
                   <Input
-                    id="email-cli"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="phone"
+                    type="tel"
+                    placeholder="(71) 90000-0000"
+                    value={phone}
+                    onChange={(e) => setPhone(formatarTelefone(e.target.value))}
+                    maxLength={15}
                     required
                   />
                 </div>
