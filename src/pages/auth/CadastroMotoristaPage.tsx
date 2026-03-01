@@ -103,7 +103,21 @@ export default function CadastroMotoristaPage() {
 
       const userId = data.user_id;
 
-      // Upload files using anon client (storage RLS should allow)
+      // Sign in the newly created user so RLS allows uploads and updates
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: form.email.trim().toLowerCase(),
+        password: form.senha,
+      });
+
+      if (signInError) {
+        console.error("Auto sign-in failed:", signInError);
+        // Account created but can't upload files without auth
+        toast.success("Conta criada! Faça login e reenvie os documentos.");
+        navigate("/login");
+        return;
+      }
+
+      // Upload files now that user is authenticated
       try {
         const selfiePath = await uploadFile(userId, selfieFile, "selfie");
         const cnhPath = await uploadFile(userId, cnhFile, "cnh");
@@ -114,16 +128,22 @@ export default function CadastroMotoristaPage() {
         await supabase.storage.from("profile-photos").upload(profilePath, selfieFile, { upsert: true });
 
         // Update motorista with file paths
-        await supabase.from("motoristas").update({
+        const { error: updateError } = await supabase.from("motoristas").update({
           selfie_url: selfiePath,
           cnh_url: cnhPath,
           doc_veiculo_url: docVeiculoPath,
           foto_url: profilePath,
         }).eq("user_id", userId);
+
+        if (updateError) {
+          console.error("Update motorista error:", updateError);
+        }
       } catch (uploadErr) {
         console.error("Upload error (account created):", uploadErr);
-        // Account was created, files can be re-uploaded later
       }
+
+      // Sign out so user goes through normal login flow
+      await supabase.auth.signOut();
 
       toast.success("Cadastro enviado! Aguarde aprovação do KYC.");
       navigate("/login");
