@@ -74,70 +74,61 @@ export default function CadastroMotoristaPage() {
 
     setLoading(true);
 
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.senha,
-      options: { emailRedirectTo: window.location.origin },
-    });
-
-    if (authError || !authData.user) {
-      const msg = authError?.message || "Erro ao criar conta";
-      if (msg.includes("already registered")) {
-        toast.error("Este email já está cadastrado. Faça login.");
-      } else {
-        toast.error(msg);
-      }
-      setLoading(false);
-      return;
-    }
-
     try {
-      const selfiePath = await uploadFile(authData.user.id, selfieFile, "selfie");
-      const cnhPath = await uploadFile(authData.user.id, cnhFile, "cnh");
-      const docVeiculoPath = await uploadFile(authData.user.id, docVeiculoFile!, "doc-veiculo");
-
-      // Upload selfie also as profile photo
-      const selfieExt = selfieFile.name.split(".").pop() || "jpg";
-      const profilePath = `${authData.user.id}/profile.${selfieExt}`;
-      await supabase.storage.from("profile-photos").upload(profilePath, selfieFile, { upsert: true });
-
-      const { error: profileError } = await supabase.from("motoristas").insert({
-        user_id: authData.user.id,
-        cpf: cpfLimpo,
-        nome: form.nome,
-        telefone: form.telefone.replace(/\D/g, ""),
-        bairro_id: form.bairro_id,
-        selfie_url: selfiePath,
-        cnh_url: cnhPath,
-        doc_veiculo_url: docVeiculoPath,
-        foto_url: profilePath,
-        placa: form.placa.toUpperCase().trim(),
+      // First create user via edge function (bypasses rate limits)
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/signup-motorista`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({
+          email: form.email,
+          senha: form.senha,
+          nome: form.nome,
+          cpf: cpfLimpo,
+          telefone: form.telefone.replace(/\D/g, ""),
+          bairro_id: form.bairro_id,
+          placa: form.placa,
+        }),
       });
 
-      if (profileError) {
-        const msg = profileError.message || "";
-        if (msg.includes("motoristas_cpf_key") || msg.includes("duplicate key") && msg.includes("cpf")) {
-          toast.error("Este CPF já está cadastrado.");
-        } else if (msg.includes("motoristas_telefone_key") || msg.includes("duplicate key") && msg.includes("telefone")) {
-          toast.error("Este telefone já está cadastrado.");
-        } else {
-          throw profileError;
-        }
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        toast.error(data.error || "Erro ao criar conta");
         setLoading(false);
         return;
+      }
+
+      const userId = data.user_id;
+
+      // Upload files using anon client (storage RLS should allow)
+      try {
+        const selfiePath = await uploadFile(userId, selfieFile, "selfie");
+        const cnhPath = await uploadFile(userId, cnhFile, "cnh");
+        const docVeiculoPath = await uploadFile(userId, docVeiculoFile!, "doc-veiculo");
+
+        const selfieExt = selfieFile.name.split(".").pop() || "jpg";
+        const profilePath = `${userId}/profile.${selfieExt}`;
+        await supabase.storage.from("profile-photos").upload(profilePath, selfieFile, { upsert: true });
+
+        // Update motorista with file paths
+        await supabase.from("motoristas").update({
+          selfie_url: selfiePath,
+          cnh_url: cnhPath,
+          doc_veiculo_url: docVeiculoPath,
+          foto_url: profilePath,
+        }).eq("user_id", userId);
+      } catch (uploadErr) {
+        console.error("Upload error (account created):", uploadErr);
+        // Account was created, files can be re-uploaded later
       }
 
       toast.success("Cadastro enviado! Aguarde aprovação do KYC.");
       navigate("/login");
     } catch (err: any) {
-      const errMsg = err.message || "Erro ao finalizar cadastro";
-      if (errMsg.includes("motoristas_cpf_key")) {
-        toast.error("Este CPF já está cadastrado.");
-      } else if (errMsg.includes("motoristas_telefone_key")) {
-        toast.error("Este telefone já está cadastrado.");
-      } else {
-        toast.error(errMsg);
-      }
+      toast.error(err.message || "Erro ao finalizar cadastro");
     } finally {
       setLoading(false);
     }
