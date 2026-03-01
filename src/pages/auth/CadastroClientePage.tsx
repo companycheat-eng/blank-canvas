@@ -17,6 +17,7 @@ export default function CadastroClientePage() {
   const [form, setForm] = useState({
     nome: "",
     cpf: "",
+    email: "",
     telefone: "",
     senha: "",
     bairro_id: "",
@@ -32,6 +33,12 @@ export default function CadastroClientePage() {
     }
     if (!form.bairro_id) {
       toast.error("Selecione um bairro");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email.trim())) {
+      toast.error("Email inválido");
       return;
     }
 
@@ -54,6 +61,7 @@ export default function CadastroClientePage() {
           senha: form.senha,
           nome: form.nome,
           cpf: cpfLimpo,
+          email: form.email.trim(),
           bairro_id: form.bairro_id,
         }),
       });
@@ -104,6 +112,10 @@ export default function CadastroClientePage() {
             <div className="space-y-2">
               <Label>CPF</Label>
               <Input placeholder="000.000.000-00" value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} required />
+            </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input type="email" placeholder="seu@email.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
             </div>
             <div className="space-y-2">
               <Label>Telefone</Label>
