@@ -54,7 +54,31 @@ serve(async (req) => {
       });
     }
 
-    // For clients, use phone@carreto.app format
+    // For clients, look up email from clientes table, then auth
+    const { data: cliente } = await supabase
+      .from("clientes")
+      .select("user_id, email")
+      .eq("telefone", digits)
+      .limit(1)
+      .maybeSingle();
+
+    if (cliente) {
+      // If email stored in clientes table, use it
+      if (cliente.email) {
+        return new Response(JSON.stringify({ email: cliente.email }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Otherwise get from auth
+      const { data: authUser } = await supabase.auth.admin.getUserById(cliente.user_id);
+      if (authUser?.user?.email) {
+        return new Response(JSON.stringify({ email: authUser.user.email }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // Fallback
     return new Response(JSON.stringify({ email: `${digits}@carreto.app` }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
