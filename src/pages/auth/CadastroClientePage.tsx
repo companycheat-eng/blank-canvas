@@ -41,70 +41,43 @@ export default function CadastroClientePage() {
     }
 
     setLoading(true);
-    const telefoneLimpo = form.telefone.replace(/\D/g, "");
-
-    // Use phone as fake email for auth (phone@carreto.app)
-    const fakeEmail = `${telefoneLimpo}@carreto.app`;
 
     try {
-      const signUpRes = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/signup`, {
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/signup-client`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
         body: JSON.stringify({
-          email: fakeEmail,
-          password: form.senha,
-        }),
-      });
-
-      const signUpData = await signUpRes.json();
-      console.log("[Cadastro] Signup response:", signUpRes.status, signUpData);
-
-      if (!signUpRes.ok || !signUpData.access_token || !signUpData.user?.id) {
-        const msg = signUpData.msg || signUpData.error_description || signUpData.message || "Erro ao criar conta";
-        toast.error(msg.includes("already registered") ? "Este telefone já está cadastrado" : msg);
-        setLoading(false);
-        return;
-      }
-
-      const userId = signUpData.user.id;
-      const accessToken = signUpData.access_token;
-
-      const insertRes = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/clientes`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          Authorization: `Bearer ${accessToken}`,
-          Prefer: "return=minimal",
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          cpf: cpfLimpo,
-          telefone: telefoneLimpo,
+          telefone: form.telefone,
+          senha: form.senha,
           nome: form.nome,
+          cpf: cpfLimpo,
           bairro_id: form.bairro_id,
         }),
       });
 
+      const data = await res.json();
+      console.log("[Cadastro] Response:", res.status, data);
 
-      if (!insertRes.ok) {
-        const errBody = await insertRes.json().catch(() => ({}));
-        toast.error("Erro ao salvar perfil: " + (errBody.message || insertRes.statusText));
+      if (!res.ok || !data.ok) {
+        toast.error(data.error || "Erro ao criar conta");
         setLoading(false);
         return;
       }
 
-      // Now set the session in supabase client
-      await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: signUpData.refresh_token,
-      });
-
-      toast.success("Conta criada com sucesso!");
-      navigate("/");
+      if (data.access_token) {
+        await supabase.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+        });
+        toast.success("Conta criada com sucesso!");
+        navigate("/");
+      } else {
+        toast.success("Conta criada! Faça login para continuar.");
+        navigate("/login");
+      }
     } catch (err) {
       toast.error("Erro inesperado. Tente novamente.");
     } finally {
