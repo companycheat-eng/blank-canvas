@@ -848,6 +848,67 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      aceitar_contra_proposta: {
+        Args: { p_corrida_id: string; p_proposta_id: string }
+        Returns: Json
+      }
+      aceitar_corrida: {
+        Args: { p_corrida_id: string; p_motorista_id: string }
+        Returns: Json
+      }
+      cancelar_corrida_cliente: {
+        Args: { p_cliente_id: string; p_corrida_id: string }
+        Returns: Json
+      }
+      cancelar_corrida_motorista: {
+        Args: { p_corrida_id: string; p_motorista_id: string }
+        Returns: Json
+      }
+      corridas_disponiveis_motorista: {
+        Args: { p_excluir_ids?: string[]; p_motorista_id: string }
+        Returns: {
+          bairro_id: string
+          cancelado_por: string | null
+          cliente_foto_url: string | null
+          cliente_id: string
+          cliente_nome: string
+          codigo_coleta: string | null
+          codigo_entrega: string | null
+          com_ajudante: boolean
+          contra_proposta_at: string | null
+          contra_proposta_valor: number | null
+          created_at: string
+          destino_lat: number
+          destino_lng: number
+          destino_texto: string
+          distancia_km: number | null
+          duracao_min: number | null
+          forma_pagamento: string
+          id: string
+          motorista_id: string | null
+          origem_lat: number
+          origem_lng: number
+          origem_texto: string
+          preco_ajudante: number
+          preco_itens: number
+          preco_km: number
+          preco_total_estimado: number
+          status: Database["public"]["Enums"]["corrida_status"]
+          taxa_creditos_debitada: number | null
+          taxa_pct_usada: number | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "corridas"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      enviar_contra_proposta: {
+        Args: { p_corrida_id: string; p_motorista_id: string; p_valor: number }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
