@@ -304,7 +304,11 @@ export default function ClienteMapa() {
           }
         }
         setCorridaAtiva(corrida);
-        setStep("aguardando");
+        if (["buscando", "contra_proposta"].includes(corrida.status)) {
+          setStep("aguardando");
+        } else if (["aceita", "a_caminho", "chegou", "carregando", "em_deslocamento"].includes(corrida.status)) {
+          setStep("aguardando"); // step aguardando handles all active states for now based on UI logic
+        }
       }
     };
     checkActive();
@@ -846,7 +850,7 @@ export default function ClienteMapa() {
     const loadPropostas = async () => {
       const { data } = await supabase
         .from("contra_propostas")
-        .select("*")
+        .select("*, motoristas(nome, foto_url, nota_referencia, tipo_veiculo, placa)")
         .eq("corrida_id", corridaAtiva.id)
         .order("valor", { ascending: true });
       setPropostas(data || []);
@@ -860,8 +864,27 @@ export default function ClienteMapa() {
         { event: "INSERT", schema: "public", table: "contra_propostas", filter: `corrida_id=eq.${corridaAtiva.id}` },
         (payload: any) => {
           const p = payload.new;
-          setPropostas((prev) => prev.some((x) => x.id === p.id) ? prev : [...prev, p].sort((a, b) => a.valor - b.valor));
-          toast.info("Nova proposta recebida!");
+          // Fetch driver info for the new proposal
+          const fetchDriverInfo = async () => {
+            const { data: m } = await supabase
+              .from("motoristas")
+              .select("nome, foto_url, nota_referencia, tipo_veiculo, placa")
+              .eq("id", p.motorista_id)
+              .single();
+            
+            const proposalWithDriver = {
+              ...p,
+              motoristas: m
+            };
+
+            setPropostas((prev) => {
+              const exists = prev.some((x) => x.id === p.id);
+              if (exists) return prev;
+              return [...prev, proposalWithDriver].sort((a, b) => a.valor - b.valor);
+            });
+            toast.info("Nova proposta recebida!");
+          };
+          fetchDriverInfo();
         }
       )
       .subscribe();
@@ -1377,18 +1400,18 @@ export default function ClienteMapa() {
                             <div key={p.id} className="p-3 bg-secondary rounded-lg">
                               <div className="flex items-center gap-3">
                                 <ZoomableAvatar
-                                  src={p.motorista_foto_url ? `${baseUrl}/storage/v1/object/public/profile-photos/${p.motorista_foto_url}` : null}
-                                  alt={p.motorista_nome}
+                                  src={p.motoristas?.foto_url ? `${baseUrl}/storage/v1/object/public/profile-photos/${p.motoristas.foto_url}` : null}
+                                  alt={p.motoristas?.nome}
                                   fallbackIcon={<Navigation className="h-4 w-4 text-muted-foreground" />}
                                   size="sm"
                                 />
                                 <div className="flex-1 min-w-0">
-                                  <p className="font-semibold text-sm">{titleCase(p.motorista_nome)}</p>
+                                  <p className="font-semibold text-sm">{titleCase(p.motoristas?.nome || "Motorista")}</p>
                                   <div className="flex items-center gap-2">
-                                    <StarRating nota={p.motorista_nota || 5} size="sm" />
+                                    <StarRating nota={p.motoristas?.nota_referencia || 5} size="sm" />
                                     <span className="text-xs text-muted-foreground">
-                                      {p.motorista_veiculo && titleCase(p.motorista_veiculo)}
-                                      {p.motorista_placa && ` · ${p.motorista_placa.toUpperCase()}`}
+                                      {p.motoristas?.tipo_veiculo && titleCase(p.motoristas.tipo_veiculo)}
+                                      {p.motoristas?.placa && ` · ${p.motoristas.placa.toUpperCase()}`}
                                     </span>
                                   </div>
                                 </div>
