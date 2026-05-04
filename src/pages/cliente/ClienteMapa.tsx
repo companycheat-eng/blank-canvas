@@ -280,7 +280,7 @@ export default function ClienteMapa() {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token || apikey;
       const res = await fetch(
-        `${baseUrl}/rest/v1/corridas?select=*&cliente_id=eq.${clienteId}&status=in.(buscando,aceita,a_caminho,chegou,carregando,em_deslocamento)&order=created_at.desc&limit=1`,
+        `${baseUrl}/rest/v1/corridas?select=*&cliente_id=eq.${clienteId}&status=in.(buscando,contra_proposta,aceita,a_caminho,chegou,carregando,em_deslocamento)&order=created_at.desc&limit=1`,
         { headers: { apikey, Authorization: `Bearer ${token}` } }
       );
       const data = await res.json();
@@ -848,7 +848,6 @@ export default function ClienteMapa() {
         .from("contra_propostas")
         .select("*")
         .eq("corrida_id", corridaAtiva.id)
-        .eq("status", "pendente")
         .order("valor", { ascending: true });
       setPropostas(data || []);
     };
