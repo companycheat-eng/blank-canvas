@@ -1400,18 +1400,18 @@ export default function ClienteMapa() {
                             <div key={p.id} className="p-3 bg-secondary rounded-lg">
                               <div className="flex items-center gap-3">
                                 <ZoomableAvatar
-                                  src={p.motorista_foto_url ? `${baseUrl}/storage/v1/object/public/profile-photos/${p.motorista_foto_url}` : null}
-                                  alt={p.motorista_nome}
+                                  src={p.motoristas?.foto_url ? `${baseUrl}/storage/v1/object/public/profile-photos/${p.motoristas.foto_url}` : null}
+                                  alt={p.motoristas?.nome}
                                   fallbackIcon={<Navigation className="h-4 w-4 text-muted-foreground" />}
                                   size="sm"
                                 />
                                 <div className="flex-1 min-w-0">
-                                  <p className="font-semibold text-sm">{titleCase(p.motorista_nome)}</p>
+                                  <p className="font-semibold text-sm">{titleCase(p.motoristas?.nome || "Motorista")}</p>
                                   <div className="flex items-center gap-2">
-                                    <StarRating nota={p.motorista_nota || 5} size="sm" />
+                                    <StarRating nota={p.motoristas?.nota_referencia || 5} size="sm" />
                                     <span className="text-xs text-muted-foreground">
-                                      {p.motorista_veiculo && titleCase(p.motorista_veiculo)}
-                                      {p.motorista_placa && ` · ${p.motorista_placa.toUpperCase()}`}
+                                      {p.motoristas?.tipo_veiculo && titleCase(p.motoristas.tipo_veiculo)}
+                                      {p.motoristas?.placa && ` · ${p.motoristas.placa.toUpperCase()}`}
                                     </span>
                                   </div>
                                 </div>
