@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import splashGif from "@/assets/splash.gif";
+
+const splashGif = "/splash.gif";
 
 // Duration must match the GIF length exactly
 const GIF_DURATION_MS = 8000;
