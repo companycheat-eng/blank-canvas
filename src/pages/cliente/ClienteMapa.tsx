@@ -864,8 +864,27 @@ export default function ClienteMapa() {
         { event: "INSERT", schema: "public", table: "contra_propostas", filter: `corrida_id=eq.${corridaAtiva.id}` },
         (payload: any) => {
           const p = payload.new;
-          setPropostas((prev) => prev.some((x) => x.id === p.id) ? prev : [...prev, p].sort((a, b) => a.valor - b.valor));
-          toast.info("Nova proposta recebida!");
+          // Fetch driver info for the new proposal
+          const fetchDriverInfo = async () => {
+            const { data: m } = await supabase
+              .from("motoristas")
+              .select("nome, foto_url, nota_referencia, tipo_veiculo, placa")
+              .eq("id", p.motorista_id)
+              .single();
+            
+            const proposalWithDriver = {
+              ...p,
+              motoristas: m
+            };
+
+            setPropostas((prev) => {
+              const exists = prev.some((x) => x.id === p.id);
+              if (exists) return prev;
+              return [...prev, proposalWithDriver].sort((a, b) => a.valor - b.valor);
+            });
+            toast.info("Nova proposta recebida!");
+          };
+          fetchDriverInfo();
         }
       )
       .subscribe();
