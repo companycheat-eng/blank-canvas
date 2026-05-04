@@ -840,7 +840,7 @@ export default function ClienteMapa() {
   // Realtime subscription for contra-propostas
   useEffect(() => {
     if (step !== "aguardando" || !corridaAtiva?.id) return;
-    if (corridaAtiva.status !== "buscando") return;
+    if (corridaAtiva.status !== "buscando" && corridaAtiva.status !== "contra_proposta") return;
 
     // Load existing proposals
     const loadPropostas = async () => {
