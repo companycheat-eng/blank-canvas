@@ -850,7 +850,7 @@ export default function ClienteMapa() {
     const loadPropostas = async () => {
       const { data } = await supabase
         .from("contra_propostas")
-        .select("*")
+        .select("*, motoristas(nome, foto_url, nota_referencia, tipo_veiculo, placa)")
         .eq("corrida_id", corridaAtiva.id)
         .order("valor", { ascending: true });
       setPropostas(data || []);
