@@ -304,7 +304,11 @@ export default function ClienteMapa() {
           }
         }
         setCorridaAtiva(corrida);
-        setStep("aguardando");
+        if (["buscando", "contra_proposta"].includes(corrida.status)) {
+          setStep("aguardando");
+        } else if (["aceita", "a_caminho", "chegou", "carregando", "em_deslocamento"].includes(corrida.status)) {
+          setStep("aguardando"); // step aguardando handles all active states for now based on UI logic
+        }
       }
     };
     checkActive();
