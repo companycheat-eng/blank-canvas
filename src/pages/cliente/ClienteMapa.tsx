@@ -819,7 +819,7 @@ export default function ClienteMapa() {
   // Auto-cancel after 5 minutes if still searching
   useEffect(() => {
     if (step !== "aguardando" || !corridaAtiva?.id) return;
-    if (corridaAtiva.status !== "buscando") return;
+    if (corridaAtiva.status !== "buscando" && corridaAtiva.status !== "contra_proposta") return;
 
     const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
     const createdAt = new Date(corridaAtiva.created_at).getTime();
