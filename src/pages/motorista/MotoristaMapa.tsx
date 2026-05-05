@@ -715,6 +715,11 @@ export default function MotoristaMapa() {
                     {c.duracao_min ? ` · ${c.duracao_min} min` : ""}
                   </span>
                   <div className="flex items-center gap-2">
+                    {c.status === "contra_proposta" && (
+                      <Badge variant="outline" className="text-[10px] py-0 border-primary text-primary">
+                        Com ofertas
+                      </Badge>
+                    )}
                      {c.com_ajudante && (
                        <Badge variant="secondary" className="gap-1 text-xs">
                          <Users className="h-3 w-3" /> Ajudante
