@@ -865,7 +865,7 @@ export type Database = {
         Returns: Json
       }
       corridas_disponiveis_motorista: {
-        Args: { p_excluir_ids?: string[]; p_motorista_id: string }
+        Args: { p_excluir_ids: string[]; p_motorista_id: string }
         Returns: {
           bairro_id: string
           cancelado_por: string | null
