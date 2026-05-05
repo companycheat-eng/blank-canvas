@@ -803,6 +803,11 @@ export default function MotoristaMapa() {
                       {(selectedCorrida as any).forma_pagamento === "pix" ? "PIX" : "Dinheiro"}
                     </Badge>
                   )}
+                  {selectedCorrida.status === "contra_proposta" && (
+                    <Badge variant="outline" className="border-primary text-primary">
+                      Outros motoristas enviaram propostas
+                    </Badge>
+                  )}
                 </div>
                 <span className="font-bold text-lg">R$ {Number(selectedCorrida.preco_total_estimado).toFixed(2)}</span>
               </div>
